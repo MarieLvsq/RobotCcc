@@ -114,22 +114,17 @@ const fetchAndSaveOffersByCity = async (city) => {
         }
       );
 
-      // Check the status code
-      if (response.status !== 200) {
+      // Handle both 200 OK and 206 Partial Content status codes
+      if (![200, 206].includes(response.status)) {
         throw new Error(
           `API request failed with status code: ${response.status}`
         );
       }
 
-      console.log("Response Data:", response.data); // Add this line to inspect the structure
+      console.log("Response Data:", response.data); // To inspect the structure
 
-      // Replace 'offers' with the correct property path if necessary
       const offres = response.data.resultats || [];
-      console.log("Offres:", offres); // Add this line to inspect the offers
-
-      if (offres.length < 100) {
-        hasMore = false;
-      }
+      console.log("Offres:", offres); // To inspect the offers
 
       for (const offerData of offres) {
         const offre = new OffreEmploi({ data: offerData });
@@ -137,21 +132,26 @@ const fetchAndSaveOffersByCity = async (city) => {
         console.log("Saved offer:", offerData.id);
       }
 
-      if (offers.length > 0) {
-        page++;
-      } else {
+      // If the number of offers is less than 100, or the status code is 200, there are no more pages
+      if (offres.length < 100 || response.status === 200) {
         hasMore = false;
+      } else {
+        // Increase the page number for the next iteration
+        page++;
       }
     }
   } catch (error) {
-    if (error instanceof AggregateError) {
-      // Log each error in the AggregateError
-      for (const individualError of error.errors) {
-        console.error(individualError);
-      }
+    if (error.response) {
+      // Axios error with response (e.g., status code not in the 200 range)
+      console.error(
+        `API Error: ${error.response.status} - ${error.response.statusText}`
+      );
+    } else if (error.request) {
+      // Axios error with request (no response received)
+      console.error(`API Error: No response received - ${error.request}`);
     } else {
-      // It's not an AggregateError, just log the full error
-      console.error(error);
+      // Non-Axios error (or not related to the HTTP request)
+      console.error(`Error: ${error.message}`);
     }
   }
 };
