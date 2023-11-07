@@ -60,37 +60,61 @@ mongoose
   });
 
 // Modèle Mongoose pour une offre d'emploi
-const offreEmploiSchema = new mongoose.Schema(
+const offreSchema = new mongoose.Schema(
   {
     data: {}, // This will store the entire offer object
   },
   { strict: false }
 ); // Disable strict mode to accept fields not defined in the schema
 
-/*
-const offreEmploiSchema = new mongoose.Schema({
-  id: String,
-  intitule: String,
-  description: String,
-  dateCreation: Date,
-  dateActualisation: Date,
-  lieuTravail: {
-    libelle: String,
-    latitude: Number,
-    longitude: Number,
-    codepostal: String,
-    commune: String, // INSEE code
-  },
-  typeContratLibelle: String,
-  salaireLibelle: String,
-  urlOrigine: String,
-  secteurActiviteLibelle: String,
-});*/
-
-const OffreEmploi = mongoose.model("OffreEmploi", offreEmploiSchema);
+const OffreEmploi = mongoose.model("Offres", offreSchema);
 
 // Fonction pour récupérer et enregistrer les données d'une liste de villes
-const city = "28085";
+const cities = [
+  "63113",
+  "69123",
+  "25056",
+  "21231",
+  "35238",
+  "45234",
+  "2A004",
+  "2B033",
+  "51108",
+  "57463",
+  "67482",
+  "80021",
+  "59350",
+  "75056",
+  "14118",
+  "76540",
+  "33063",
+  "87085",
+  "86194",
+  "34172",
+  "31555",
+  "13055",
+  "44109",
+  "97105",
+  "97209",
+  "97302",
+  "97411",
+  "97611",
+];
+
+// Function to delete job offers older than 14 days
+const deleteOldOffers = async () => {
+  const fourteenDaysAgo = new Date(
+    new Date().setDate(new Date().getDate() - 14)
+  );
+  try {
+    const result = await OffreEmploi.deleteMany({
+      "data.dateCreation": { $lt: fourteenDaysAgo.toISOString() },
+    });
+    console.log(`Old job offers deleted: ${result.deletedCount}`);
+  } catch (error) {
+    console.error("Error deleting old job offers:", error);
+  }
+};
 
 const fetchAndSaveOffersByCity = async (city) => {
   try {
@@ -106,7 +130,7 @@ const fetchAndSaveOffersByCity = async (city) => {
       const response = await axios.get(
         `https://api.pole-emploi.io/partenaire/offresdemploi/v2/offres/search?commune=${encodeURIComponent(
           city
-        )}&range=${(page - 1) * 100}-${page * 100 - 1}`,
+        )}&range=${(page - 1) * 100}-${page * 100 - 1}&publieeDepuis=7`,
         {
           headers: {
             Authorization: `Bearer ${access_token}`,
@@ -154,13 +178,15 @@ const fetchAndSaveOffersByCity = async (city) => {
       console.error(`Error: ${error.message}`);
     }
   }
+  // Call the delete function after saving the latest offers
+  await deleteOldOffers();
 };
 
 // Parcourir chaque ville et récupérer ses offres
 const fetchAndSaveOffersForTopCities = async () => {
-  //for (const city of cities) {
-  await fetchAndSaveOffersByCity(city);
-  // }
+  for (const city of cities) {
+    await fetchAndSaveOffersByCity(city);
+  }
 };
 
 /*
