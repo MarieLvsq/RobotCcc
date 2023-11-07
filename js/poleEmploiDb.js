@@ -103,12 +103,12 @@ const cities = [
 
 // Function to delete job offers older than 14 days
 const deleteOldOffers = async () => {
-  const fourteenDaysAgo = new Date(
-    new Date().setDate(new Date().getDate() - 14)
+  const thirtyoneDaysAgo = new Date(
+    new Date().setDate(new Date().getDate() - 31)
   );
   try {
     const result = await OffreEmploi.deleteMany({
-      "data.dateCreation": { $lt: fourteenDaysAgo.toISOString() },
+      "data.dateCreation": { $lt: thirtyoneDaysAgo.toISOString() },
     });
     console.log(`Old job offers deleted: ${result.deletedCount}`);
   } catch (error) {
@@ -189,7 +189,6 @@ const fetchAndSaveOffersForTopCities = async () => {
   }
 };
 
-/*
 // Planifier la récupération des offres à 11h et 18h chaque jour
 schedule.scheduleJob({ hour: 11, minute: 0 }, async () => {
   console.log("Lancement de la tâche planifiée à 11h.");
@@ -200,7 +199,7 @@ schedule.scheduleJob({ hour: 18, minute: 0 }, async () => {
   console.log("Lancement de la tâche planifiée à 18h.");
   fetchAndSaveOffersForTopCities();
 });
-*/
+
 const startFetching = async () => {
   console.log("Starting to fetch and save offers for top cities.");
   await fetchAndSaveOffersForTopCities();
