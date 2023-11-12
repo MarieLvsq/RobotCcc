@@ -21,7 +21,7 @@ mongoose
     console.error("Connection error", err);
   });
 
-// Modèle Mongoose pour une offre d'emploi
+// Modèle Mongoose pour la qualité de l'air
 const AirQualitySchema = new mongoose.Schema(
   {
     city: String,
